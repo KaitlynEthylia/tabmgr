@@ -1,0 +1,45 @@
+{
+  "name": "tabmgr",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "An extension for managing tab groups in a more dynamic and ephemeral way than Google seems to intend they be used.",
+  "background": {"service_worker": "tabmgr.js"},
+  "icons": {
+    "256": "icon256.png",
+    "128": "icon128.png",
+    "48": "icon48.png"
+  },
+  "commands": {
+    "newTab": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+T"
+      },
+      "description": "Create a new tab in a new group."
+    },
+    "move": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+M"
+      },
+      "description": "Move the current tab to a new group."
+    },
+    "close": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D"
+      },
+      "description": "Close the current group."
+    },
+    "closeElse": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+O"
+      },
+      "description": "Close all groups except the current one."
+    },
+    "expand": {
+      "description": "Expand all groups except the current one."
+    },
+    "collapse": {
+      "description": "Collapse all groups except the current one."
+    }
+  },
+  "permissions": ["tabGroups"]
+}
