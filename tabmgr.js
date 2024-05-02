@@ -1,9 +1,6 @@
 chrome.runtime.onStartup.addListener(init);
 chrome.runtime.onInstalled.addListener(init);
 
-let lastGid = -1;
-let collapse = true;
-
 chrome.commands.onCommand.addListener(async command => {
     switch(command) {
         case "newTab":
@@ -19,11 +16,11 @@ chrome.commands.onCommand.addListener(async command => {
             await closeElse();
             break;
         case "expand":
-            collapse = false;
+            await chrome.storage.session.set({ collapse: false });
             await update((await getCurrentTab()).groupId);
             break;
         case "collapse":
-            collapse = true;
+            await chrome.storage.session.set({ collapse: true });
             await update((await getCurrentTab()).groupId);
             break;
     }
@@ -39,10 +36,11 @@ async function getCurrentTab() {
 
 async function update(gid) {
     if(gid < 0) { return; }
-    lastGid = gid;
+    await chrome.storage.session.set({ lastGid: gid });
+    let collapse = (await chrome.storage.session.get(["collapse"])).collapse;
     let groups = await chrome.tabGroups.query({});
     groups.forEach(async g => {
-        if (g.id == lastGid) { return; }
+        if (g.id == gid) { return; }
         await chrome.tabGroups.update(g.id, {
             collapsed: collapse,
         });
@@ -56,6 +54,10 @@ async function init() {
     if (tabs.length < 1) { return; }
     let groupId = await chrome.tabs.group({ tabIds: tabs });
     update(groupId);
+    await chrome.storage.session.set({
+        lastGid: -1,
+        collapse: true,
+    })
 }
 
 chrome.tabs.onActivated.addListener(async info => {
@@ -64,12 +66,13 @@ chrome.tabs.onActivated.addListener(async info => {
     }, 150);
 });
 
-chrome.tabs.onUpdated.addListener((_, info, tab) => {
+chrome.tabs.onUpdated.addListener(async(_, info, tab) => {
     if(info.groupId == undefined) { return; }
-    if(tab.active) { update(tab.groupId); }
+    if(tab.active) { await update(tab.groupId); }
 });
 
-chrome.tabs.onCreated.addListener(tab => {
+chrome.tabs.onCreated.addListener(async tab => {
+    let lastGid = (await chrome.storage.session.get(["lastGid"])).lastGid;
     if(lastGid < 0) { return; }
     chrome.tabs.group({
         groupId: lastGid,
@@ -91,6 +94,7 @@ async function move() {
 }
 
 async function closeElse() {
+    let lastGid = (await chrome.storage.session.get(["lastGid"])).lastGid;
     let tabs = (await chrome.tabs.query({}))
         .filter(tab => tab.groupId != lastGid)
         .map(tab => tab.id);

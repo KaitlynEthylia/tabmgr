@@ -41,5 +41,5 @@
       "description": "Collapse all groups except the current one."
     }
   },
-  "permissions": ["tabGroups"]
+  "permissions": ["tabGroups", "storage"]
 }
