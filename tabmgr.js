@@ -62,7 +62,8 @@ async function init() {
 
 chrome.tabs.onActivated.addListener(async info => {
     setTimeout(async() => {
-        update((await chrome.tabs.get(info.tabId))?.groupId ?? -1);
+        try { update((await chrome.tabs.get(info.tabId))?.groupId ?? -1); }
+        catch(_) {}
     }, 150);
 });
 
@@ -71,7 +72,10 @@ chrome.tabs.onUpdated.addListener(async(_, info, tab) => {
     if(tab.active) { await update(tab.groupId); }
 });
 
+let stop = false
+
 chrome.tabs.onCreated.addListener(async tab => {
+    if(stop) { return; }
     let lastGid = (await chrome.storage.session.get(["lastGid"])).lastGid;
     if(lastGid < 0) { return; }
     chrome.tabs.group({
@@ -81,9 +85,11 @@ chrome.tabs.onCreated.addListener(async tab => {
 });
 
 async function newTab() {
+    stop = true;
     let tabId = (await chrome.tabs.create({})).id;
     await chrome.tabs.ungroup(tabId);
     await chrome.tabs.group({ tabIds: tabId });
+    stop = false;
 }
 
 async function move() {
