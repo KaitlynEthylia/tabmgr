@@ -104,7 +104,6 @@ async function closeElse() {
     let tabs = (await chrome.tabs.query({}))
         .filter(tab => tab.groupId != lastGid)
         .map(tab => tab.id);
-    console.log(tabs);
     await chrome.tabs.remove(tabs);
 }
 
